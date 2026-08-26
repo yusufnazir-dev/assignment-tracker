@@ -12,8 +12,7 @@ function getHeader(
 ) {
   return (
     headers.find(
-      (header) =>
-        header.name?.toLowerCase() === name.toLowerCase()
+      (header) => header.name?.toLowerCase() === name.toLowerCase()
     )?.value || ""
   );
 }
@@ -44,15 +43,38 @@ function getEmailBody(payload: {
   return body;
 }
 
+function describeGoogleAuthError(error: unknown): string {
+  const err = error as {
+    message?: string;
+    response?: { data?: { error?: string; error_description?: string } };
+  };
+
+  const code = err.response?.data?.error || "";
+  const description = err.response?.data?.error_description || err.message || "";
+
+  if (code === "disabled_client") {
+    return "Google OAuth client is disabled. Re-enable the OAuth client in Google Cloud Console (APIs & Services → Credentials), then reconnect Gmail.";
+  }
+
+  if (code === "invalid_grant" || /invalid_grant/i.test(description)) {
+    return "Gmail connection expired. Disconnect the app in your Google Account and click Connect Gmail again.";
+  }
+
+  if (code === "unauthorized_client") {
+    return "Google OAuth client is not authorized for this app. Check the OAuth client ID/secret and redirect URI.";
+  }
+
+  return description || "Failed to sync Gmail";
+}
+
 export async function GET() {
   try {
-    const { data: connection, error: connectionError } =
-      await supabaseAdmin
-        .from("gmail_connections")
-        .select("*")
-        .order("updated_at", { ascending: false })
-        .limit(1)
-        .single();
+    const { data: connection, error: connectionError } = await supabaseAdmin
+      .from("gmail_connections")
+      .select("*")
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .single();
 
     if (connectionError || !connection) {
       return NextResponse.json(
@@ -73,6 +95,54 @@ export async function GET() {
       expiry_date: connection.expiry_date,
     });
 
+    // Persist refreshed tokens so later syncs keep working.
+    oauth2Client.on("tokens", async (tokens) => {
+      try {
+        await supabaseAdmin
+          .from("gmail_connections")
+          .update({
+            access_token: tokens.access_token || connection.access_token,
+            refresh_token: tokens.refresh_token || connection.refresh_token,
+            expiry_date: tokens.expiry_date || connection.expiry_date,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", connection.id);
+      } catch (tokenError) {
+        console.error("Failed to save refreshed Gmail tokens:", tokenError);
+      }
+    });
+
+    // Proactively refresh if the access token is expired/near expiry.
+    const expiresAt = Number(connection.expiry_date) || 0;
+    if (!expiresAt || expiresAt < Date.now() + 60_000) {
+      try {
+        const { credentials } = await oauth2Client.refreshAccessToken();
+        oauth2Client.setCredentials({
+          ...oauth2Client.credentials,
+          ...credentials,
+          refresh_token:
+            credentials.refresh_token || connection.refresh_token,
+        });
+
+        await supabaseAdmin
+          .from("gmail_connections")
+          .update({
+            access_token: credentials.access_token || connection.access_token,
+            refresh_token:
+              credentials.refresh_token || connection.refresh_token,
+            expiry_date: credentials.expiry_date || connection.expiry_date,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", connection.id);
+      } catch (refreshError) {
+        console.error("Gmail token refresh error:", refreshError);
+        return NextResponse.json(
+          { error: describeGoogleAuthError(refreshError) },
+          { status: 401 }
+        );
+      }
+    }
+
     const gmail = google.gmail({
       version: "v1",
       auth: oauth2Client,
@@ -80,7 +150,7 @@ export async function GET() {
 
     const response = await gmail.users.messages.list({
       userId: "me",
-      q: 'newer_than:90d (assignment OR homework OR coursework OR deadline OR "due date" OR submission OR submit OR project OR quiz OR assessment OR "lab task" OR "lab work")',
+      q: 'newer_than:90d (assignment OR homework OR coursework OR deadline OR "due date" OR "last date" OR submission OR submit OR project OR quiz OR assessment OR tutorial OR "lab task" OR "lab work")',
       maxResults: 50,
     });
 
@@ -136,7 +206,6 @@ export async function GET() {
 
       // Keep the original subject in `title` so we can re-parse course,
       // assignment name, and due date from subject + body on every load.
-      // Never store the email sent date as the assignment due date.
       const { error } = await supabaseAdmin.from("gmail_assignments").upsert(
         {
           gmail_message_id: message.id,
@@ -174,7 +243,7 @@ export async function GET() {
     console.error("Gmail sync error:", error);
 
     return NextResponse.json(
-      { error: "Failed to sync Gmail" },
+      { error: describeGoogleAuthError(error) },
       { status: 500 }
     );
   }
