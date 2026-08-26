@@ -103,6 +103,9 @@ export async function GET() {
 
     const gmail: DashboardAssignment[] = (gmailResult.data || []).map(
       (row) => {
+        // row.title is the original email subject (saved at sync time).
+        // Always re-parse body + subject so due date comes from email content,
+        // never from the email sent date.
         const parsed = parseAssignmentEmail({
           subject: row.title || "",
           body: row.email_body || row.snippet || "",
@@ -114,7 +117,8 @@ export async function GET() {
           id: `gmail-${row.gmail_message_id}`,
           title: parsed.title,
           course: parsed.course,
-          due_date: parsed.dueDate,
+          // Empty string when no due date was found in the mail content.
+          due_date: parsed.dueDate || "",
           status: mapGmailStatus(row.status),
           source: "gmail" as const,
           sender: row.sender || parsed.sender,
@@ -125,9 +129,12 @@ export async function GET() {
       }
     );
 
-    const assignments = [...manual, ...gmail].sort((a, b) =>
-      a.due_date.localeCompare(b.due_date)
-    );
+    const assignments = [...manual, ...gmail].sort((a, b) => {
+      if (!a.due_date && !b.due_date) return 0;
+      if (!a.due_date) return 1;
+      if (!b.due_date) return -1;
+      return a.due_date.localeCompare(b.due_date);
+    });
 
     return NextResponse.json({
       assignments,

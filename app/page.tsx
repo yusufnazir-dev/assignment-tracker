@@ -50,6 +50,8 @@ function getDateFromString(dateString: string) {
 }
 
 function formatDate(date: string) {
+  if (!date) return "No due date";
+
   const [year, month, day] = date.split("-");
 
   const months = [
@@ -81,6 +83,8 @@ function getStartOfToday() {
 }
 
 function getDaysUntilDue(dueDate: string) {
+  if (!dueDate) return null;
+
   const today = getStartOfToday();
   const due = getDateFromString(dueDate);
   const difference = due.getTime() - today.getTime();
@@ -89,6 +93,10 @@ function getDaysUntilDue(dueDate: string) {
 }
 
 function getDueText(assignment: Assignment) {
+  if (!assignment.due_date) {
+    return "No due date found";
+  }
+
   const formattedDate = formatDate(assignment.due_date);
 
   if (assignment.status === "Completed") {
@@ -96,6 +104,10 @@ function getDueText(assignment: Assignment) {
   }
 
   const days = getDaysUntilDue(assignment.due_date);
+
+  if (days === null) {
+    return "No due date found";
+  }
 
   if (days < 0) {
     const overdueDays = Math.abs(days);
@@ -115,21 +127,22 @@ function getDueText(assignment: Assignment) {
 }
 
 function isOverdue(assignment: Assignment) {
-  if (assignment.status === "Completed") {
+  if (assignment.status === "Completed" || !assignment.due_date) {
     return false;
   }
 
-  return getDaysUntilDue(assignment.due_date) < 0;
+  const days = getDaysUntilDue(assignment.due_date);
+  return days !== null && days < 0;
 }
 
 function isDueThisWeek(assignment: Assignment) {
-  if (assignment.status === "Completed") {
+  if (assignment.status === "Completed" || !assignment.due_date) {
     return false;
   }
 
   const days = getDaysUntilDue(assignment.due_date);
 
-  return days >= 0 && days <= 7;
+  return days !== null && days >= 0 && days <= 7;
 }
 
 function formatLastSynced(value: string | null) {
@@ -409,7 +422,7 @@ export default function Home() {
   }
 
   function getDueTextColor(assignment: Assignment) {
-    if (assignment.status === "Completed") {
+    if (assignment.status === "Completed" || !assignment.due_date) {
       return "text-slate-500";
     }
 
@@ -427,7 +440,7 @@ export default function Home() {
       return "font-semibold text-amber-700";
     }
 
-    if (days <= 2) {
+    if (days !== null && days <= 2) {
       return "font-medium text-orange-600";
     }
 
@@ -457,7 +470,7 @@ export default function Home() {
   }
 
   function getUrgencyBadge(assignment: Assignment) {
-    if (assignment.status === "Completed") {
+    if (assignment.status === "Completed" || !assignment.due_date) {
       return null;
     }
 
@@ -768,10 +781,19 @@ export default function Home() {
                         {getUrgencyBadge(assignment)}
                       </div>
                       <p className="mt-1 text-sm text-slate-500">
-                        {assignment.course}
-                        {assignment.sender
-                          ? ` · ${assignment.sender}`
-                          : ""}
+                        {(() => {
+                          const titleHasCourse = assignment.title
+                            .toLowerCase()
+                            .includes(assignment.course.toLowerCase());
+
+                          if (titleHasCourse) {
+                            return assignment.sender || null;
+                          }
+
+                          return assignment.sender
+                            ? `${assignment.course} · ${assignment.sender}`
+                            : assignment.course;
+                        })()}
                       </p>
                     </div>
                   </div>

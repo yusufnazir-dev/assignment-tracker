@@ -134,6 +134,9 @@ export async function GET() {
       // Keep user-set status (e.g. completed) on re-sync.
       const status = statusByMessageId.get(message.id) ?? "pending";
 
+      // Keep the original subject in `title` so we can re-parse course,
+      // assignment name, and due date from subject + body on every load.
+      // Never store the email sent date as the assignment due date.
       const { error } = await supabaseAdmin.from("gmail_assignments").upsert(
         {
           gmail_message_id: message.id,
