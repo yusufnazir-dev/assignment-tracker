@@ -1,26 +1,106 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --ink: #0b1f2a;
+  --ink-soft: #1a3a4a;
+  --mist: #e8f4f2;
+  --fog: #f3faf8;
+  --line: #c5ddd8;
+  --accent: #0f766e;
+  --accent-bright: #14b8a6;
+  --warn: #c2410c;
+  --ok: #047857;
+  --surface: rgba(255, 255, 255, 0.72);
+  --background: var(--fog);
+  --foreground: var(--ink);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-ink: var(--ink);
+  --color-mist: var(--mist);
+  --color-accent: var(--accent);
+  --color-line: var(--line);
+  --font-sans: var(--font-dm-sans);
+  --font-display: var(--font-syne);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.tma-shell {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse 80% 50% at 10% -10%, #9fd5cf55, transparent 55%),
+    radial-gradient(ellipse 60% 40% at 90% 0%, #7eb8d455, transparent 50%),
+    radial-gradient(ellipse 50% 40% at 50% 100%, #b8e0d833, transparent 55%),
+    linear-gradient(180deg, #f7fcfb 0%, #eef6f4 45%, #e8f1f0 100%);
+}
+
+.tma-shell::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.35;
+  background-image:
+    linear-gradient(rgba(15, 118, 110, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 118, 110, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(180deg, black 0%, transparent 85%);
+}
+
+@keyframes tma-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tma-pulse-soft {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.tma-rise {
+  animation: tma-rise 0.55s ease-out both;
+}
+
+.tma-rise-delay-1 {
+  animation-delay: 0.08s;
+}
+
+.tma-rise-delay-2 {
+  animation-delay: 0.16s;
+}
+
+.tma-rise-delay-3 {
+  animation-delay: 0.24s;
+}
+
+.tma-glass {
+  background: var(--surface);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(197, 221, 216, 0.85);
+}
+
+.tma-brand {
+  font-family: var(--font-syne), var(--font-dm-sans), sans-serif;
+  letter-spacing: -0.03em;
 }

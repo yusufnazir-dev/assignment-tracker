@@ -179,7 +179,6 @@ function formatDateTime(date: Date) {
     year: "numeric",
     hour: "numeric",
     minute: "2-digit",
-    second: "2-digit",
     hour12: true,
   });
 }
@@ -427,45 +426,45 @@ export default function Home() {
 
   function getStatusStyle(status: Status) {
     if (status === "Completed") {
-      return "bg-green-100 text-green-700";
+      return "bg-emerald-100/90 text-emerald-800";
     }
 
     if (status === "In Progress") {
-      return "bg-yellow-100 text-yellow-700";
+      return "bg-amber-100/90 text-amber-900";
     }
 
-    return "bg-red-100 text-red-700";
+    return "bg-rose-100/90 text-rose-800";
   }
 
   function getDotColor(assignment: Assignment) {
     if (assignment.status === "Completed") {
-      return "bg-green-500";
+      return "bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.18)]";
     }
 
     if (isOverdue(assignment)) {
-      return "bg-red-500";
+      return "bg-rose-500 shadow-[0_0_0_4px_rgba(244,63,94,0.18)]";
     }
 
     if (assignment.status === "In Progress") {
-      return "bg-yellow-500";
+      return "bg-amber-400 shadow-[0_0_0_4px_rgba(251,191,36,0.2)]";
     }
 
-    return "bg-slate-400";
+    return "bg-teal-400/80 shadow-[0_0_0_4px_rgba(45,212,191,0.15)]";
   }
 
   function getDueTextColor(assignment: Assignment) {
     if (assignment.status === "Completed" || !assignment.due_date) {
-      return "text-slate-500";
+      return "text-teal-800/50";
     }
 
     if (isOverdue(assignment)) {
-      return "font-medium text-red-700";
+      return "font-medium text-rose-700";
     }
 
     const days = getDaysUntilDue(assignment.due_date);
 
     if (days === 0) {
-      return "font-semibold text-red-700";
+      return "font-semibold text-rose-700";
     }
 
     if (days === 1) {
@@ -473,32 +472,32 @@ export default function Home() {
     }
 
     if (days !== null && days <= 2) {
-      return "font-medium text-orange-600";
+      return "font-medium text-orange-700";
     }
 
-    return "text-slate-500";
+    return "text-teal-800/55";
   }
 
   function getRowHighlight(assignment: Assignment) {
     if (assignment.status === "Completed") {
-      return "hover:bg-slate-50";
+      return "hover:bg-teal-50/50";
     }
 
     if (isOverdue(assignment)) {
-      return "border-l-4 border-l-red-500 bg-red-50 hover:bg-red-100/70";
+      return "border-l-[3px] border-l-rose-500 bg-rose-50/70 hover:bg-rose-50";
     }
 
     const days = getDaysUntilDue(assignment.due_date);
 
     if (days === 0) {
-      return "border-l-4 border-l-red-500 bg-red-50 hover:bg-red-100/70";
+      return "border-l-[3px] border-l-rose-500 bg-rose-50/70 hover:bg-rose-50";
     }
 
     if (days === 1) {
-      return "border-l-4 border-l-amber-400 bg-amber-50 hover:bg-amber-100/70";
+      return "border-l-[3px] border-l-amber-400 bg-amber-50/60 hover:bg-amber-50/80";
     }
 
-    return "hover:bg-slate-50";
+    return "hover:bg-teal-50/40";
   }
 
   function getUrgencyBadge(assignment: Assignment) {
@@ -508,7 +507,7 @@ export default function Home() {
 
     if (isOverdue(assignment)) {
       return (
-        <span className="rounded-full bg-red-600 px-2.5 py-1 text-xs font-semibold text-white">
+        <span className="rounded-md bg-rose-600 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-white uppercase">
           Overdue
         </span>
       );
@@ -518,7 +517,7 @@ export default function Home() {
 
     if (days === 0) {
       return (
-        <span className="rounded-full bg-red-600 px-2.5 py-1 text-xs font-semibold text-white">
+        <span className="rounded-md bg-rose-600 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-white uppercase">
           Due today
         </span>
       );
@@ -526,7 +525,7 @@ export default function Home() {
 
     if (days === 1) {
       return (
-        <span className="rounded-full bg-amber-500 px-2.5 py-1 text-xs font-semibold text-white">
+        <span className="rounded-md bg-amber-500 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-white uppercase">
           Due tomorrow
         </span>
       );
@@ -535,25 +534,52 @@ export default function Home() {
     return null;
   }
 
+  const needsReconnect =
+    /oauth|disabled|expired|reconnect|invalid_grant/i.test(error);
+
+  const filterLabel =
+    listFilter === "overdue"
+      ? "Overdue"
+      : listFilter === "dueThisWeek"
+        ? "Due this week"
+        : listFilter === "completed"
+          ? "Completed"
+          : listFilter === "all"
+            ? "All"
+            : "Pending";
+
+  const filters: { id: ListFilter; label: string }[] = [
+    { id: "pending", label: "Pending" },
+    { id: "completed", label: "Completed" },
+    { id: "overdue", label: "Overdue" },
+    { id: "dueThisWeek", label: "This week" },
+    { id: "all", label: "Total" },
+  ];
+
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900">
-      <nav className="border-b border-slate-200 bg-white">
+    <main className="tma-shell text-ink">
+      <nav className="tma-glass sticky top-0 z-40 border-b border-teal-900/5">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-xl font-bold">TrackMyAssignments</h1>
-            <p className="text-sm text-slate-500">
-              Stay ahead of every deadline
+          <div className="tma-rise">
+            <h1 className="tma-brand text-2xl font-bold text-teal-950">
+              TrackMyAssignments
+            </h1>
+            <p className="mt-0.5 text-sm text-teal-800/55">
+              Deadlines, sorted.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="tma-rise tma-rise-delay-1 flex flex-wrap items-center gap-2">
             {gmail.connected ? (
               <>
-                <div className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600">
-                  <span className="font-medium text-green-700">Gmail</span>
-                  {" · "}
-                  {gmail.email}
-                  <span className="text-slate-400">
+                <div className="rounded-xl border border-teal-900/10 bg-white/60 px-3 py-2 text-sm text-teal-900/70">
+                  <span className="inline-flex items-center gap-1.5 font-medium text-teal-700">
+                    <span className="h-1.5 w-1.5 animate-[tma-pulse-soft_2s_ease-in-out_infinite] rounded-full bg-teal-500" />
+                    Gmail
+                  </span>
+                  <span className="text-teal-900/30"> · </span>
+                  <span className="break-all">{gmail.email}</span>
+                  <span className="text-teal-900/35">
                     {" · "}
                     {formatLastSynced(gmail.lastSynced)}
                   </span>
@@ -562,7 +588,7 @@ export default function Home() {
                 <button
                   onClick={syncGmail}
                   disabled={syncing}
-                  className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium transition hover:bg-slate-50 disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-xl bg-teal-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-700 disabled:opacity-50"
                 >
                   {syncing ? (
                     <Loader2 size={16} className="animate-spin" />
@@ -575,7 +601,7 @@ export default function Home() {
             ) : (
               <a
                 href="/api/auth/gmail"
-                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium transition hover:bg-slate-50"
+                className="inline-flex items-center gap-2 rounded-xl bg-teal-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-700"
               >
                 <Mail size={16} />
                 Connect Gmail
@@ -586,10 +612,14 @@ export default function Home() {
       </nav>
 
       <div className="mx-auto max-w-7xl px-6 py-10">
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="tma-rise tma-rise-delay-1 mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="text-3xl font-bold">{getGreeting(now)}</h2>
-            <p className="mt-1 text-slate-500">{formatDateTime(now)}</p>
+            <p className="mb-2 text-xs font-semibold tracking-[0.18em] text-teal-700/70 uppercase">
+              {formatDateTime(now)}
+            </p>
+            <h2 className="tma-brand text-4xl font-bold tracking-tight text-teal-950 sm:text-5xl">
+              {getGreeting(now)}
+            </h2>
           </div>
 
           <button
@@ -597,7 +627,7 @@ export default function Home() {
               setError("");
               setShowForm(true);
             }}
-            className="flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 font-medium text-white transition hover:bg-slate-700"
+            className="flex items-center justify-center gap-2 rounded-2xl bg-teal-950 px-5 py-3.5 font-medium text-white transition hover:-translate-y-0.5 hover:bg-teal-800"
           >
             <Plus size={18} />
             Add Assignment
@@ -605,28 +635,53 @@ export default function Home() {
         </div>
 
         {notice && (
-          <div className="mb-6 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+          <div className="tma-rise mb-6 rounded-2xl border border-emerald-200/80 bg-emerald-50/90 px-4 py-3 text-sm text-emerald-800">
             {notice}
           </div>
         )}
 
-        <section className="mb-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
+        {error && (
+          <div className="tma-rise mb-6 overflow-hidden rounded-2xl border border-rose-200 bg-gradient-to-br from-rose-50 to-orange-50/40 px-5 py-4">
+            <p className="text-sm font-medium text-rose-800">{error}</p>
+            {needsReconnect && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                <a
+                  href="/api/auth/gmail"
+                  className="inline-flex items-center gap-2 rounded-xl bg-rose-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-600"
+                >
+                  <Mail size={16} />
+                  Reconnect Gmail
+                </a>
+                <a
+                  href="https://console.cloud.google.com/apis/credentials"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl border border-rose-300 bg-white/70 px-4 py-2 text-sm font-medium text-rose-800 transition hover:bg-white"
+                >
+                  Open Google Cloud
+                </a>
+              </div>
+            )}
+          </div>
+        )}
+
+        <section className="tma-rise tma-rise-delay-2 mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <StatCard
-            icon={<Clock size={22} />}
+            icon={<Clock size={20} />}
             label="Pending"
             value={statistics.pending}
             active={listFilter === "pending"}
             onClick={() => setListFilter("pending")}
           />
           <StatCard
-            icon={<CheckCircle2 size={22} />}
+            icon={<CheckCircle2 size={20} />}
             label="Completed"
             value={statistics.completed}
             active={listFilter === "completed"}
             onClick={() => setListFilter("completed")}
           />
           <StatCard
-            icon={<AlertCircle size={22} />}
+            icon={<AlertCircle size={20} />}
             label="Overdue"
             value={statistics.overdue}
             danger={statistics.overdue > 0}
@@ -634,14 +689,14 @@ export default function Home() {
             onClick={() => setListFilter("overdue")}
           />
           <StatCard
-            icon={<Calendar size={22} />}
+            icon={<Calendar size={20} />}
             label="Due This Week"
             value={statistics.dueThisWeek}
             active={listFilter === "dueThisWeek"}
             onClick={() => setListFilter("dueThisWeek")}
           />
           <StatCard
-            icon={<AlertCircle size={22} />}
+            icon={<AlertCircle size={20} />}
             label="Total"
             value={statistics.total}
             active={listFilter === "all"}
@@ -649,99 +704,54 @@ export default function Home() {
           />
         </section>
 
-        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-          <div className="flex flex-col gap-4 border-b border-slate-200 p-6 sm:flex-row sm:items-center sm:justify-between">
+        <section className="tma-rise tma-rise-delay-3 overflow-hidden rounded-3xl tma-glass shadow-[0_20px_50px_-28px_rgba(11,31,42,0.35)]">
+          <div className="flex flex-col gap-4 border-b border-teal-900/8 p-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="text-xl font-bold">My Assignments</h3>
-              <p className="text-sm text-slate-500">
-                {loading
-                  ? "Loading assignments..."
-                  : listFilter === "overdue"
-                    ? "Showing overdue assignments"
-                    : listFilter === "dueThisWeek"
-                      ? "Showing assignments due this week"
-                      : listFilter === "completed"
-                        ? "Showing completed assignments"
-                        : listFilter === "all"
-                          ? "Showing all assignments"
-                          : "Showing pending assignments"}
+              <h3 className="tma-brand text-2xl font-bold text-teal-950">
+                My Assignments
+              </h3>
+              <p className="mt-1 text-sm text-teal-800/50">
+                {loading ? "Loading…" : filterLabel}
               </p>
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <div className="flex rounded-lg border border-slate-200 p-1">
-                <button
-                  onClick={() => setListFilter("pending")}
-                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
-                    listFilter === "pending"
-                      ? "bg-slate-900 text-white"
-                      : "text-slate-600 hover:bg-slate-100"
-                  }`}
-                >
-                  Pending
-                </button>
-                <button
-                  onClick={() => setListFilter("completed")}
-                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
-                    listFilter === "completed"
-                      ? "bg-slate-900 text-white"
-                      : "text-slate-600 hover:bg-slate-100"
-                  }`}
-                >
-                  Completed
-                </button>
-                <button
-                  onClick={() => setListFilter("overdue")}
-                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
-                    listFilter === "overdue"
-                      ? "bg-slate-900 text-white"
-                      : "text-slate-600 hover:bg-slate-100"
-                  }`}
-                >
-                  Overdue
-                </button>
-                <button
-                  onClick={() => setListFilter("dueThisWeek")}
-                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
-                    listFilter === "dueThisWeek"
-                      ? "bg-slate-900 text-white"
-                      : "text-slate-600 hover:bg-slate-100"
-                  }`}
-                >
-                  This week
-                </button>
-                <button
-                  onClick={() => setListFilter("all")}
-                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
-                    listFilter === "all"
-                      ? "bg-slate-900 text-white"
-                      : "text-slate-600 hover:bg-slate-100"
-                  }`}
-                >
-                  Total
-                </button>
+              <div className="flex flex-wrap rounded-xl border border-teal-900/10 bg-white/50 p-1">
+                {filters.map((filter) => (
+                  <button
+                    key={filter.id}
+                    onClick={() => setListFilter(filter.id)}
+                    className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                      listFilter === filter.id
+                        ? "bg-teal-900 text-white"
+                        : "text-teal-800/65 hover:bg-teal-900/5"
+                    }`}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
               </div>
 
               <button
                 onClick={loadAssignments}
                 title="Refresh assignments"
-                className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-100"
+                className="rounded-xl border border-teal-900/10 bg-white/50 p-2 text-teal-800/55 transition hover:bg-white hover:text-teal-900"
               >
                 <RefreshCw size={18} />
               </button>
 
-              <div className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2">
-                <Search size={18} className="text-slate-400" />
+              <div className="flex items-center gap-2 rounded-xl border border-teal-900/10 bg-white/50 px-3 py-2">
+                <Search size={18} className="text-teal-800/35" />
                 <input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Search assignments..."
-                  className="w-44 bg-transparent outline-none sm:w-56"
+                  placeholder="Search…"
+                  className="w-36 bg-transparent text-sm outline-none placeholder:text-teal-800/35 sm:w-48"
                 />
                 {search && (
                   <button
                     onClick={() => setSearch("")}
-                    className="text-slate-400 hover:text-slate-700"
+                    className="text-teal-800/40 hover:text-teal-900"
                   >
                     <X size={16} />
                   </button>
@@ -750,35 +760,35 @@ export default function Home() {
             </div>
           </div>
 
-          {error && (
-            <div className="border-b border-red-200 bg-red-50 px-6 py-4 text-sm text-red-600">
-              {error}
-            </div>
-          )}
-
           {loading ? (
-            <div className="flex items-center justify-center gap-3 p-12 text-slate-500">
-              <Loader2 size={24} className="animate-spin" />
-              Loading assignments...
+            <div className="flex items-center justify-center gap-3 p-16 text-teal-800/50">
+              <Loader2 size={24} className="animate-spin text-teal-700" />
+              Loading assignments…
             </div>
           ) : filteredAssignments.length === 0 ? (
-            <div className="p-12 text-center">
-              <Search size={36} className="mx-auto mb-3 text-slate-300" />
-              <h4 className="font-semibold">No assignments found</h4>
-              <p className="mt-1 text-sm text-slate-500">
-                {listFilter === "completed"
-                  ? "No completed assignments yet."
-                  : listFilter === "overdue"
-                    ? "No overdue assignments."
-                    : listFilter === "dueThisWeek"
-                      ? "Nothing due this week."
-                      : listFilter === "all"
-                        ? "No assignments yet."
-                        : "Add an assignment or sync Gmail to get started."}
+            <div className="px-6 py-16 text-center">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-100/80 text-teal-700">
+                <Search size={28} />
+              </div>
+              <h4 className="tma-brand text-lg font-bold text-teal-950">
+                Nothing here yet
+              </h4>
+              <p className="mx-auto mt-2 max-w-sm text-sm text-teal-800/55">
+                {needsReconnect
+                  ? "Fix Gmail connection above, then sync again."
+                  : listFilter === "completed"
+                    ? "No completed assignments yet."
+                    : listFilter === "overdue"
+                      ? "No overdue assignments."
+                      : listFilter === "dueThisWeek"
+                        ? "Nothing due this week."
+                        : listFilter === "all"
+                          ? "Add an assignment or sync Gmail."
+                          : "Add an assignment or sync Gmail."}
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-teal-900/6">
               {filteredAssignments.map((assignment) => (
                 <div
                   key={assignment.id}
@@ -792,7 +802,7 @@ export default function Home() {
                         updateStatus(assignment.id, assignment.status)
                       }
                       title="Click to change status"
-                      className={`h-4 w-4 shrink-0 rounded-full transition hover:scale-125 ${getDotColor(
+                      className={`h-3.5 w-3.5 shrink-0 rounded-full transition hover:scale-125 ${getDotColor(
                         assignment
                       )}`}
                     />
@@ -800,9 +810,9 @@ export default function Home() {
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <h4
-                          className={`truncate font-semibold ${
+                          className={`truncate font-semibold text-teal-950 ${
                             assignment.status === "Completed"
-                              ? "text-slate-500 line-through"
+                              ? "text-teal-800/45 line-through"
                               : ""
                           }`}
                         >
@@ -810,7 +820,7 @@ export default function Home() {
                         </h4>
                         {getUrgencyBadge(assignment)}
                       </div>
-                      <p className="mt-1 text-sm text-slate-500">
+                      <p className="mt-1 truncate text-sm text-teal-800/50">
                         {(() => {
                           const titleHasCourse = assignment.title
                             .toLowerCase()
@@ -828,29 +838,27 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-3 md:justify-end">
+                  <div className="flex flex-wrap items-center gap-2.5 md:justify-end">
                     <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                      className={`rounded-md px-2 py-0.5 text-[11px] font-semibold tracking-wide uppercase ${
                         assignment.source === "gmail"
-                          ? "bg-sky-100 text-sky-700"
-                          : "bg-slate-100 text-slate-600"
+                          ? "bg-sky-100 text-sky-800"
+                          : "bg-teal-100 text-teal-800"
                       }`}
                     >
                       {assignment.source === "gmail" ? "Gmail" : "Manual"}
                     </span>
 
-                    <div
-                      className={`text-sm ${getDueTextColor(assignment)}`}
-                    >
+                    <div className={`text-sm ${getDueTextColor(assignment)}`}>
                       {getDueText(assignment)}
                     </div>
 
-                    <div className="text-xs text-slate-400">
+                    <div className="text-xs text-teal-800/40">
                       {formatDate(assignment.due_date)}
                     </div>
 
                     <span
-                      className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusStyle(
+                      className={`rounded-md px-2.5 py-1 text-xs font-medium ${getStatusStyle(
                         assignment.status
                       )}`}
                     >
@@ -860,7 +868,7 @@ export default function Home() {
                     <button
                       onClick={() => deleteAssignment(assignment.id)}
                       title="Delete assignment"
-                      className="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                      className="rounded-lg p-2 text-teal-800/30 transition hover:bg-rose-50 hover:text-rose-600"
                     >
                       <Trash2 size={18} />
                     </button>
@@ -873,13 +881,15 @@ export default function Home() {
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-teal-950/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl border border-teal-900/10 bg-white p-6 shadow-[0_30px_80px_-20px_rgba(11,31,42,0.45)]">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold">Add Assignment</h2>
+              <h2 className="tma-brand text-xl font-bold text-teal-950">
+                Add Assignment
+              </h2>
               <button
                 onClick={() => setShowForm(false)}
-                className="rounded-lg p-2 text-slate-400 hover:bg-slate-100"
+                className="rounded-lg p-2 text-teal-800/40 hover:bg-teal-50"
               >
                 <X size={20} />
               </button>
@@ -887,7 +897,7 @@ export default function Home() {
 
             <div className="mt-5 space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-medium">
+                <label className="mb-2 block text-sm font-medium text-teal-900/80">
                   Assignment Title
                 </label>
                 <input
@@ -900,12 +910,12 @@ export default function Home() {
                       title: event.target.value,
                     })
                   }
-                  className="w-full rounded-lg border border-slate-200 px-4 py-3 outline-none focus:border-slate-500"
+                  className="w-full rounded-xl border border-teal-900/10 bg-teal-50/30 px-4 py-3 outline-none transition focus:border-teal-600 focus:bg-white"
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium">
+                <label className="mb-2 block text-sm font-medium text-teal-900/80">
                   Course Name
                 </label>
                 <input
@@ -918,12 +928,12 @@ export default function Home() {
                       course: event.target.value,
                     })
                   }
-                  className="w-full rounded-lg border border-slate-200 px-4 py-3 outline-none focus:border-slate-500"
+                  className="w-full rounded-xl border border-teal-900/10 bg-teal-50/30 px-4 py-3 outline-none transition focus:border-teal-600 focus:bg-white"
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium">
+                <label className="mb-2 block text-sm font-medium text-teal-900/80">
                   Due Date
                 </label>
                 <input
@@ -935,7 +945,7 @@ export default function Home() {
                       dueDate: event.target.value,
                     })
                   }
-                  className="w-full rounded-lg border border-slate-200 px-4 py-3 outline-none focus:border-slate-500"
+                  className="w-full rounded-xl border border-teal-900/10 bg-teal-50/30 px-4 py-3 outline-none transition focus:border-teal-600 focus:bg-white"
                 />
               </div>
             </div>
@@ -944,14 +954,14 @@ export default function Home() {
               <button
                 onClick={() => setShowForm(false)}
                 disabled={saving}
-                className="rounded-lg px-4 py-2 hover:bg-slate-100 disabled:opacity-50"
+                className="rounded-xl px-4 py-2 text-teal-900/70 hover:bg-teal-50 disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddAssignment}
                 disabled={saving}
-                className="flex items-center gap-2 rounded-lg bg-slate-900 px-5 py-2 text-white transition hover:bg-slate-700 disabled:opacity-50"
+                className="flex items-center gap-2 rounded-xl bg-teal-950 px-5 py-2 text-white transition hover:bg-teal-800 disabled:opacity-50"
               >
                 {saving && <Loader2 size={16} className="animate-spin" />}
                 {saving ? "Saving..." : "Add Assignment"}
@@ -979,31 +989,35 @@ function StatCard({
   active?: boolean;
   onClick?: () => void;
 }) {
-  const baseClass = danger
-    ? "border-red-200 bg-red-50"
-    : "border-slate-200 bg-white";
-
-  const activeClass = active
-    ? danger
-      ? "ring-2 ring-red-400"
-      : "ring-2 ring-slate-900"
-    : "";
-
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-2xl border p-5 text-left transition hover:-translate-y-0.5 hover:shadow-sm ${baseClass} ${activeClass}`}
+      className={`rounded-3xl border p-5 text-left transition duration-200 hover:-translate-y-1 ${
+        danger
+          ? "border-rose-200/80 bg-gradient-to-br from-rose-50 to-orange-50/40"
+          : "tma-glass"
+      } ${
+        active
+          ? danger
+            ? "ring-2 ring-rose-400/70"
+            : "ring-2 ring-teal-800/40"
+          : ""
+      }`}
     >
       <div
-        className={`mb-4 flex h-10 w-10 items-center justify-center rounded-xl ${
-          danger ? "bg-red-100 text-red-600" : "bg-slate-100"
+        className={`mb-4 flex h-10 w-10 items-center justify-center rounded-2xl ${
+          danger ? "bg-rose-100 text-rose-600" : "bg-teal-100/80 text-teal-800"
         }`}
       >
         {icon}
       </div>
-      <p className="text-sm text-slate-500">{label}</p>
-      <p className={`mt-1 text-3xl font-bold ${danger ? "text-red-600" : ""}`}>
+      <p className="text-sm text-teal-800/55">{label}</p>
+      <p
+        className={`tma-brand mt-1 text-3xl font-bold tracking-tight ${
+          danger ? "text-rose-600" : "text-teal-950"
+        }`}
+      >
         {value}
       </p>
     </button>
