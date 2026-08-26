@@ -161,14 +161,27 @@ function formatLastSynced(value: string | null) {
   return formatDate(value.slice(0, 10));
 }
 
-function getGreeting() {
-  const hour = new Date().getHours();
+function getGreeting(date = new Date()) {
+  const hour = date.getHours();
 
   if (hour < 5) return "Good night";
   if (hour < 12) return "Good morning";
   if (hour < 17) return "Good afternoon";
   if (hour < 21) return "Good evening";
   return "Good night";
+}
+
+function formatDateTime(date: Date) {
+  return date.toLocaleString(undefined, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
 }
 
 export default function Home() {
@@ -186,6 +199,7 @@ export default function Home() {
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [now, setNow] = useState(() => new Date());
   const [formData, setFormData] = useState({
     title: "",
     course: "",
@@ -194,6 +208,14 @@ export default function Home() {
 
   useEffect(() => {
     loadAssignments();
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+
+    return () => window.clearInterval(timer);
   }, []);
 
   async function loadAssignments() {
@@ -566,10 +588,8 @@ export default function Home() {
       <div className="mx-auto max-w-7xl px-6 py-10">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-3xl font-bold">{getGreeting()}</h2>
-            <p className="mt-1 text-slate-500">
-              Manual and Gmail assignments in one place.
-            </p>
+            <h2 className="text-3xl font-bold">{getGreeting(now)}</h2>
+            <p className="mt-1 text-slate-500">{formatDateTime(now)}</p>
           </div>
 
           <button
@@ -850,11 +870,6 @@ export default function Home() {
             </div>
           )}
         </section>
-
-        <p className="mt-4 text-center text-xs text-slate-400">
-          Click the colored dot to change status: Not Started → In Progress →
-          Completed. Completed items are hidden from Pending.
-        </p>
       </div>
 
       {showForm && (
