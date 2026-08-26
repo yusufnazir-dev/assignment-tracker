@@ -1,17 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --ink: #0b1f2a;
-  --ink-soft: #1a3a4a;
-  --mist: #e8f4f2;
-  --fog: #f3faf8;
-  --line: #c5ddd8;
-  --accent: #0f766e;
-  --accent-bright: #14b8a6;
-  --warn: #c2410c;
-  --ok: #047857;
-  --surface: rgba(255, 255, 255, 0.72);
-  --background: var(--fog);
+  --ink: #0a0a0a;
+  --paper: #f4f6f1;
+  --panel: #ffffff;
+  --lime: #c8f542;
+  --lime-deep: #9bcc1a;
+  --signal: #ff3b5c;
+  --sky: #3d8bfd;
+  --line: #0a0a0a;
+  --muted: #5c6358;
+  --background: var(--paper);
   --foreground: var(--ink);
 }
 
@@ -19,88 +18,157 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-ink: var(--ink);
-  --color-mist: var(--mist);
-  --color-accent: var(--accent);
-  --color-line: var(--line);
-  --font-sans: var(--font-dm-sans);
-  --font-display: var(--font-syne);
+  --color-paper: var(--paper);
+  --color-lime: var(--lime);
+  --color-signal: var(--signal);
+  --font-sans: var(--font-outfit);
+  --font-display: var(--font-space);
+  --font-mono: var(--font-mono-jb);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-family: var(--font-outfit), system-ui, sans-serif;
 }
 
 .tma-shell {
   position: relative;
   isolation: isolate;
   min-height: 100vh;
-  background:
-    radial-gradient(ellipse 80% 50% at 10% -10%, #9fd5cf55, transparent 55%),
-    radial-gradient(ellipse 60% 40% at 90% 0%, #7eb8d455, transparent 50%),
-    radial-gradient(ellipse 50% 40% at 50% 100%, #b8e0d833, transparent 55%),
-    linear-gradient(180deg, #f7fcfb 0%, #eef6f4 45%, #e8f1f0 100%);
+  overflow-x: hidden;
+  background: var(--paper);
 }
 
 .tma-shell::before {
+  content: "";
+  position: absolute;
+  inset: -20% -10% auto;
+  height: 70vh;
+  z-index: -2;
+  background:
+    radial-gradient(circle at 15% 30%, #c8f54266 0%, transparent 42%),
+    radial-gradient(circle at 85% 10%, #3d8bfd55 0%, transparent 38%),
+    radial-gradient(circle at 60% 60%, #ff3b5c22 0%, transparent 40%);
+  filter: blur(8px);
+  animation: tma-orb 14s ease-in-out infinite alternate;
+}
+
+.tma-shell::after {
   content: "";
   pointer-events: none;
   position: absolute;
   inset: 0;
   z-index: -1;
-  opacity: 0.35;
-  background-image:
-    linear-gradient(rgba(15, 118, 110, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(15, 118, 110, 0.04) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: linear-gradient(180deg, black 0%, transparent 85%);
+  opacity: 0.4;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+
+@keyframes tma-orb {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(2%, 4%, 0) scale(1.06);
+  }
 }
 
 @keyframes tma-rise {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(18px) scale(0.985);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
-@keyframes tma-pulse-soft {
+@keyframes tma-ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes tma-blink {
   0%,
   100% {
-    opacity: 0.55;
+    opacity: 1;
   }
   50% {
-    opacity: 1;
+    opacity: 0.25;
   }
 }
 
 .tma-rise {
-  animation: tma-rise 0.55s ease-out both;
+  animation: tma-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .tma-rise-delay-1 {
-  animation-delay: 0.08s;
+  animation-delay: 0.07s;
 }
 
 .tma-rise-delay-2 {
-  animation-delay: 0.16s;
+  animation-delay: 0.14s;
 }
 
 .tma-rise-delay-3 {
-  animation-delay: 0.24s;
-}
-
-.tma-glass {
-  background: var(--surface);
-  backdrop-filter: blur(14px);
-  border: 1px solid rgba(197, 221, 216, 0.85);
+  animation-delay: 0.22s;
 }
 
 .tma-brand {
-  font-family: var(--font-syne), var(--font-dm-sans), sans-serif;
-  letter-spacing: -0.03em;
+  font-family: var(--font-space), var(--font-outfit), sans-serif;
+  letter-spacing: -0.045em;
+}
+
+.tma-mono {
+  font-family: var(--font-mono-jb), ui-monospace, monospace;
+}
+
+.tma-panel {
+  background: var(--panel);
+  border: 2px solid var(--ink);
+  box-shadow: 5px 5px 0 var(--ink);
+}
+
+.tma-panel-flat {
+  background: var(--panel);
+  border: 2px solid var(--ink);
+}
+
+.tma-btn {
+  border: 2px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.tma-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--ink);
+}
+
+.tma-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+
+.tma-ticker {
+  display: flex;
+  width: max-content;
+  animation: tma-ticker 28s linear infinite;
+}
+
+.tma-watermark {
+  font-family: var(--font-space), sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.08em;
+  line-height: 0.85;
+  user-select: none;
+  pointer-events: none;
 }

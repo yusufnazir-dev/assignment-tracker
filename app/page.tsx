@@ -426,78 +426,78 @@ export default function Home() {
 
   function getStatusStyle(status: Status) {
     if (status === "Completed") {
-      return "bg-emerald-100/90 text-emerald-800";
+      return "bg-lime-200 text-ink border border-ink";
     }
 
     if (status === "In Progress") {
-      return "bg-amber-100/90 text-amber-900";
+      return "bg-sky-200 text-ink border border-ink";
     }
 
-    return "bg-rose-100/90 text-rose-800";
+    return "bg-rose-200 text-ink border border-ink";
   }
 
   function getDotColor(assignment: Assignment) {
     if (assignment.status === "Completed") {
-      return "bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.18)]";
+      return "bg-lime-400 border-2 border-ink";
     }
 
     if (isOverdue(assignment)) {
-      return "bg-rose-500 shadow-[0_0_0_4px_rgba(244,63,94,0.18)]";
+      return "bg-[var(--signal)] border-2 border-ink";
     }
 
     if (assignment.status === "In Progress") {
-      return "bg-amber-400 shadow-[0_0_0_4px_rgba(251,191,36,0.2)]";
+      return "bg-sky-400 border-2 border-ink";
     }
 
-    return "bg-teal-400/80 shadow-[0_0_0_4px_rgba(45,212,191,0.15)]";
+    return "bg-zinc-300 border-2 border-ink";
   }
 
   function getDueTextColor(assignment: Assignment) {
     if (assignment.status === "Completed" || !assignment.due_date) {
-      return "text-teal-800/50";
+      return "text-zinc-500";
     }
 
     if (isOverdue(assignment)) {
-      return "font-medium text-rose-700";
+      return "font-bold text-[var(--signal)]";
     }
 
     const days = getDaysUntilDue(assignment.due_date);
 
     if (days === 0) {
-      return "font-semibold text-rose-700";
+      return "font-bold text-[var(--signal)]";
     }
 
     if (days === 1) {
-      return "font-semibold text-amber-700";
+      return "font-bold text-orange-600";
     }
 
     if (days !== null && days <= 2) {
-      return "font-medium text-orange-700";
+      return "font-semibold text-orange-600";
     }
 
-    return "text-teal-800/55";
+    return "text-zinc-600";
   }
 
   function getRowHighlight(assignment: Assignment) {
     if (assignment.status === "Completed") {
-      return "hover:bg-teal-50/50";
+      return "hover:bg-zinc-50";
     }
 
     if (isOverdue(assignment)) {
-      return "border-l-[3px] border-l-rose-500 bg-rose-50/70 hover:bg-rose-50";
+      return "bg-rose-50 hover:bg-rose-100/80";
     }
 
     const days = getDaysUntilDue(assignment.due_date);
 
     if (days === 0) {
-      return "border-l-[3px] border-l-rose-500 bg-rose-50/70 hover:bg-rose-50";
+      return "bg-rose-50 hover:bg-rose-100/80";
     }
 
     if (days === 1) {
-      return "border-l-[3px] border-l-amber-400 bg-amber-50/60 hover:bg-amber-50/80";
+      return "bg-amber-50 hover:bg-amber-100/70";
     }
 
-    return "hover:bg-teal-50/40";
+    return "hover:bg-lime-50/60";
   }
 
   function getUrgencyBadge(assignment: Assignment) {
@@ -507,7 +507,7 @@ export default function Home() {
 
     if (isOverdue(assignment)) {
       return (
-        <span className="rounded-md bg-rose-600 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-white uppercase">
+        <span className="border-2 border-ink bg-[var(--signal)] px-2 py-0.5 text-[10px] font-bold tracking-wider text-white uppercase">
           Overdue
         </span>
       );
@@ -517,7 +517,7 @@ export default function Home() {
 
     if (days === 0) {
       return (
-        <span className="rounded-md bg-rose-600 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-white uppercase">
+        <span className="border-2 border-ink bg-[var(--signal)] px-2 py-0.5 text-[10px] font-bold tracking-wider text-white uppercase">
           Due today
         </span>
       );
@@ -525,7 +525,7 @@ export default function Home() {
 
     if (days === 1) {
       return (
-        <span className="rounded-md bg-amber-500 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-white uppercase">
+        <span className="border-2 border-ink bg-amber-300 px-2 py-0.5 text-[10px] font-bold tracking-wider text-ink uppercase">
           Due tomorrow
         </span>
       );
@@ -550,58 +550,96 @@ export default function Home() {
 
   const filters: { id: ListFilter; label: string }[] = [
     { id: "pending", label: "Pending" },
-    { id: "completed", label: "Completed" },
-    { id: "overdue", label: "Overdue" },
-    { id: "dueThisWeek", label: "This week" },
-    { id: "all", label: "Total" },
+    { id: "completed", label: "Done" },
+    { id: "overdue", label: "Late" },
+    { id: "dueThisWeek", label: "Week" },
+    { id: "all", label: "All" },
+  ];
+
+  const clockTime = now.toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+
+  const clockDate = now.toLocaleDateString(undefined, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+
+  const tickerItems = [
+    statistics.overdue > 0
+      ? `${statistics.overdue} overdue — handle these first`
+      : "No overdue work — nice",
+    `${statistics.pending} pending`,
+    `${statistics.dueThisWeek} due this week`,
+    gmail.connected
+      ? `Gmail linked · ${formatLastSynced(gmail.lastSynced)}`
+      : "Connect Gmail to auto-import deadlines",
+    getGreeting(now),
   ];
 
   return (
     <main className="tma-shell text-ink">
-      <nav className="tma-glass sticky top-0 z-40 border-b border-teal-900/5">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="tma-rise">
-            <h1 className="tma-brand text-2xl font-bold text-teal-950">
-              TrackMyAssignments
-            </h1>
-            <p className="mt-0.5 text-sm text-teal-800/55">
-              Deadlines, sorted.
-            </p>
+      <div className="overflow-hidden border-b-2 border-ink bg-ink text-[var(--lime)]">
+        <div className="tma-ticker py-2 text-xs font-semibold tracking-[0.14em] uppercase">
+          {[...tickerItems, ...tickerItems].map((item, index) => (
+            <span key={`${item}-${index}`} className="mx-6 inline-flex items-center gap-6">
+              <span>{item}</span>
+              <span className="text-white/30">/</span>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <nav className="relative z-40 border-b-2 border-ink bg-white/80 backdrop-blur-md">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+          <div className="tma-rise flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center border-2 border-ink bg-[var(--lime)] tma-brand text-lg font-bold">
+              T
+            </div>
+            <div>
+              <h1 className="tma-brand text-xl font-bold sm:text-2xl">
+                TrackMyAssignments
+              </h1>
+              <p className="text-xs font-medium tracking-wide text-zinc-500 uppercase">
+                Deadline cockpit
+              </p>
+            </div>
           </div>
 
           <div className="tma-rise tma-rise-delay-1 flex flex-wrap items-center gap-2">
             {gmail.connected ? (
               <>
-                <div className="rounded-xl border border-teal-900/10 bg-white/60 px-3 py-2 text-sm text-teal-900/70">
-                  <span className="inline-flex items-center gap-1.5 font-medium text-teal-700">
-                    <span className="h-1.5 w-1.5 animate-[tma-pulse-soft_2s_ease-in-out_infinite] rounded-full bg-teal-500" />
-                    Gmail
+                <div className="tma-panel-flat max-w-full px-3 py-2 text-sm">
+                  <span className="inline-flex items-center gap-2 font-semibold">
+                    <span className="h-2 w-2 bg-[var(--lime)] outline outline-2 outline-ink" />
+                    Gmail live
                   </span>
-                  <span className="text-teal-900/30"> · </span>
-                  <span className="break-all">{gmail.email}</span>
-                  <span className="text-teal-900/35">
-                    {" · "}
-                    {formatLastSynced(gmail.lastSynced)}
-                  </span>
+                  <span className="text-zinc-400"> · </span>
+                  <span className="break-all text-zinc-600">{gmail.email}</span>
                 </div>
 
                 <button
                   onClick={syncGmail}
                   disabled={syncing}
-                  className="inline-flex items-center gap-2 rounded-xl bg-teal-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-700 disabled:opacity-50"
+                  className="tma-btn inline-flex items-center gap-2 bg-[var(--lime)] px-4 py-2 text-sm font-bold disabled:opacity-50"
                 >
                   {syncing ? (
                     <Loader2 size={16} className="animate-spin" />
                   ) : (
                     <RefreshCw size={16} />
                   )}
-                  {syncing ? "Syncing..." : "Sync Gmail"}
+                  {syncing ? "Syncing..." : "Sync"}
                 </button>
               </>
             ) : (
               <a
                 href="/api/auth/gmail"
-                className="inline-flex items-center gap-2 rounded-xl bg-teal-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-700"
+                className="tma-btn inline-flex items-center gap-2 bg-[var(--lime)] px-4 py-2 text-sm font-bold"
               >
                 <Mail size={16} />
                 Connect Gmail
@@ -611,43 +649,66 @@ export default function Home() {
         </div>
       </nav>
 
-      <div className="mx-auto max-w-7xl px-6 py-10">
-        <div className="tma-rise tma-rise-delay-1 mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+      <div className="relative mx-auto max-w-7xl px-5 py-10 sm:px-8">
+        <div
+          aria-hidden
+          className="tma-watermark absolute top-4 right-0 hidden text-[min(28vw,220px)] text-ink/[0.04] select-none lg:block"
+        >
+          DUE
+        </div>
+
+        <div className="tma-rise tma-rise-delay-1 mb-10 grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
           <div>
-            <p className="mb-2 text-xs font-semibold tracking-[0.18em] text-teal-700/70 uppercase">
-              {formatDateTime(now)}
+            <p className="mb-3 inline-flex items-center gap-2 border-2 border-ink bg-white px-3 py-1 text-xs font-bold tracking-[0.16em] uppercase">
+              <span className="h-2 w-2 animate-[tma-blink_1.2s_steps(1)_infinite] bg-[var(--signal)]" />
+              Live session
             </p>
-            <h2 className="tma-brand text-4xl font-bold tracking-tight text-teal-950 sm:text-5xl">
-              {getGreeting(now)}
+            <h2 className="tma-brand whitespace-pre-line text-5xl leading-[0.95] font-bold sm:text-6xl lg:text-7xl">
+              {getGreeting(now).replace(" ", "\n")}
             </h2>
+            <p className="mt-4 max-w-md text-base text-zinc-600">
+              Your assignments, deadlines, and Gmail imports — one sharp board.
+            </p>
           </div>
 
-          <button
-            onClick={() => {
-              setError("");
-              setShowForm(true);
-            }}
-            className="flex items-center justify-center gap-2 rounded-2xl bg-teal-950 px-5 py-3.5 font-medium text-white transition hover:-translate-y-0.5 hover:bg-teal-800"
-          >
-            <Plus size={18} />
-            Add Assignment
-          </button>
+          <div className="flex flex-col gap-3 sm:flex-row lg:flex-col lg:items-stretch">
+            <div className="tma-panel flex flex-1 flex-col justify-between bg-ink p-5 text-[var(--lime)]">
+              <p className="text-xs font-bold tracking-[0.2em] text-white/50 uppercase">
+                Local time
+              </p>
+              <p className="tma-mono mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+                {clockTime}
+              </p>
+              <p className="tma-mono mt-2 text-sm text-white/55">{clockDate}</p>
+            </div>
+
+            <button
+              onClick={() => {
+                setError("");
+                setShowForm(true);
+              }}
+              className="tma-btn flex flex-1 items-center justify-center gap-2 bg-[var(--lime)] px-5 py-4 text-base font-bold"
+            >
+              <Plus size={20} />
+              Add Assignment
+            </button>
+          </div>
         </div>
 
         {notice && (
-          <div className="tma-rise mb-6 rounded-2xl border border-emerald-200/80 bg-emerald-50/90 px-4 py-3 text-sm text-emerald-800">
+          <div className="tma-rise mb-6 border-2 border-ink bg-lime-100 px-4 py-3 text-sm font-medium">
             {notice}
           </div>
         )}
 
         {error && (
-          <div className="tma-rise mb-6 overflow-hidden rounded-2xl border border-rose-200 bg-gradient-to-br from-rose-50 to-orange-50/40 px-5 py-4">
-            <p className="text-sm font-medium text-rose-800">{error}</p>
+          <div className="tma-rise mb-6 border-2 border-ink bg-rose-100 px-5 py-4">
+            <p className="text-sm font-semibold text-ink">{error}</p>
             {needsReconnect && (
               <div className="mt-3 flex flex-wrap gap-2">
                 <a
                   href="/api/auth/gmail"
-                  className="inline-flex items-center gap-2 rounded-xl bg-rose-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-600"
+                  className="tma-btn inline-flex items-center gap-2 bg-ink px-4 py-2 text-sm font-bold text-[var(--lime)]"
                 >
                   <Mail size={16} />
                   Reconnect Gmail
@@ -656,7 +717,7 @@ export default function Home() {
                   href="https://console.cloud.google.com/apis/credentials"
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-xl border border-rose-300 bg-white/70 px-4 py-2 text-sm font-medium text-rose-800 transition hover:bg-white"
+                  className="tma-btn inline-flex items-center gap-2 bg-white px-4 py-2 text-sm font-bold"
                 >
                   Open Google Cloud
                 </a>
@@ -665,66 +726,72 @@ export default function Home() {
           </div>
         )}
 
-        <section className="tma-rise tma-rise-delay-2 mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <section className="tma-rise tma-rise-delay-2 mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
           <StatCard
-            icon={<Clock size={20} />}
+            icon={<Clock size={18} />}
             label="Pending"
             value={statistics.pending}
             active={listFilter === "pending"}
             onClick={() => setListFilter("pending")}
+            wide
+            accent="lime"
           />
           <StatCard
-            icon={<CheckCircle2 size={20} />}
-            label="Completed"
-            value={statistics.completed}
-            active={listFilter === "completed"}
-            onClick={() => setListFilter("completed")}
-          />
-          <StatCard
-            icon={<AlertCircle size={20} />}
+            icon={<AlertCircle size={18} />}
             label="Overdue"
             value={statistics.overdue}
             danger={statistics.overdue > 0}
             active={listFilter === "overdue"}
             onClick={() => setListFilter("overdue")}
+            accent="signal"
           />
           <StatCard
-            icon={<Calendar size={20} />}
-            label="Due This Week"
+            icon={<CheckCircle2 size={18} />}
+            label="Completed"
+            value={statistics.completed}
+            active={listFilter === "completed"}
+            onClick={() => setListFilter("completed")}
+            accent="sky"
+          />
+          <StatCard
+            icon={<Calendar size={18} />}
+            label="This week"
             value={statistics.dueThisWeek}
             active={listFilter === "dueThisWeek"}
             onClick={() => setListFilter("dueThisWeek")}
+            accent="amber"
           />
           <StatCard
-            icon={<AlertCircle size={20} />}
+            icon={<AlertCircle size={18} />}
             label="Total"
             value={statistics.total}
             active={listFilter === "all"}
             onClick={() => setListFilter("all")}
+            accent="zinc"
           />
         </section>
 
-        <section className="tma-rise tma-rise-delay-3 overflow-hidden rounded-3xl tma-glass shadow-[0_20px_50px_-28px_rgba(11,31,42,0.35)]">
-          <div className="flex flex-col gap-4 border-b border-teal-900/8 p-6 sm:flex-row sm:items-center sm:justify-between">
+        <section className="tma-rise tma-rise-delay-3 tma-panel overflow-hidden">
+          <div className="flex flex-col gap-4 border-b-2 border-ink bg-[var(--lime)]/40 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
             <div>
-              <h3 className="tma-brand text-2xl font-bold text-teal-950">
+              <h3 className="tma-brand text-2xl font-bold sm:text-3xl">
                 My Assignments
               </h3>
-              <p className="mt-1 text-sm text-teal-800/50">
-                {loading ? "Loading…" : filterLabel}
+              <p className="mt-1 text-sm font-medium text-zinc-600">
+                {loading ? "Loading…" : `Filter · ${filterLabel}`}
               </p>
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <div className="flex flex-wrap rounded-xl border border-teal-900/10 bg-white/50 p-1">
+              <div className="flex flex-wrap border-2 border-ink bg-white p-1">
                 {filters.map((filter) => (
                   <button
                     key={filter.id}
                     onClick={() => setListFilter(filter.id)}
-                    className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                    className={`px-3 py-1.5 text-sm font-bold transition ${
                       listFilter === filter.id
-                        ? "bg-teal-900 text-white"
-                        : "text-teal-800/65 hover:bg-teal-900/5"
+                        ? "bg-ink text-[var(--lime)]"
+                        : "text-ink hover:bg-zinc-100"
                     }`}
                   >
                     {filter.label}
@@ -735,23 +802,23 @@ export default function Home() {
               <button
                 onClick={loadAssignments}
                 title="Refresh assignments"
-                className="rounded-xl border border-teal-900/10 bg-white/50 p-2 text-teal-800/55 transition hover:bg-white hover:text-teal-900"
+                className="tma-btn bg-white p-2"
               >
                 <RefreshCw size={18} />
               </button>
 
-              <div className="flex items-center gap-2 rounded-xl border border-teal-900/10 bg-white/50 px-3 py-2">
-                <Search size={18} className="text-teal-800/35" />
+              <div className="flex items-center gap-2 border-2 border-ink bg-white px-3 py-2">
+                <Search size={18} className="text-zinc-400" />
                 <input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder="Search…"
-                  className="w-36 bg-transparent text-sm outline-none placeholder:text-teal-800/35 sm:w-48"
+                  className="w-32 bg-transparent text-sm outline-none placeholder:text-zinc-400 sm:w-44"
                 />
                 {search && (
                   <button
                     onClick={() => setSearch("")}
-                    className="text-teal-800/40 hover:text-teal-900"
+                    className="text-zinc-400 hover:text-ink"
                   >
                     <X size={16} />
                   </button>
@@ -761,48 +828,56 @@ export default function Home() {
           </div>
 
           {loading ? (
-            <div className="flex items-center justify-center gap-3 p-16 text-teal-800/50">
-              <Loader2 size={24} className="animate-spin text-teal-700" />
+            <div className="flex items-center justify-center gap-3 p-16 text-zinc-500">
+              <Loader2 size={24} className="animate-spin" />
               Loading assignments…
             </div>
           ) : filteredAssignments.length === 0 ? (
-            <div className="px-6 py-16 text-center">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-100/80 text-teal-700">
-                <Search size={28} />
+            <div className="relative overflow-hidden px-6 py-20 text-center">
+              <div
+                aria-hidden
+                className="tma-watermark absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-[120px] text-ink/[0.04] sm:text-[160px]"
+              >
+                00
               </div>
-              <h4 className="tma-brand text-lg font-bold text-teal-950">
-                Nothing here yet
-              </h4>
-              <p className="mx-auto mt-2 max-w-sm text-sm text-teal-800/55">
-                {needsReconnect
-                  ? "Fix Gmail connection above, then sync again."
-                  : listFilter === "completed"
-                    ? "No completed assignments yet."
-                    : listFilter === "overdue"
-                      ? "No overdue assignments."
-                      : listFilter === "dueThisWeek"
-                        ? "Nothing due this week."
-                        : listFilter === "all"
-                          ? "Add an assignment or sync Gmail."
-                          : "Add an assignment or sync Gmail."}
-              </p>
+              <div className="relative">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center border-2 border-ink bg-[var(--lime)]">
+                  <Search size={26} />
+                </div>
+                <h4 className="tma-brand text-2xl font-bold">Empty board</h4>
+                <p className="mx-auto mt-2 max-w-sm text-sm text-zinc-500">
+                  {needsReconnect
+                    ? "Fix Gmail above, then sync again."
+                    : listFilter === "completed"
+                      ? "No completed assignments yet."
+                      : listFilter === "overdue"
+                        ? "Nothing overdue. Clean."
+                        : listFilter === "dueThisWeek"
+                          ? "Clear week ahead."
+                          : "Add one manually or sync Gmail."}
+                </p>
+              </div>
             </div>
           ) : (
-            <div className="divide-y divide-teal-900/6">
-              {filteredAssignments.map((assignment) => (
+            <div className="divide-y-2 divide-ink">
+              {filteredAssignments.map((assignment, index) => (
                 <div
                   key={assignment.id}
                   className={`flex flex-col gap-4 p-5 transition md:flex-row md:items-center md:justify-between ${getRowHighlight(
                     assignment
                   )}`}
+                  style={{ animationDelay: `${Math.min(index, 8) * 0.04}s` }}
                 >
                   <div className="flex min-w-0 items-center gap-4">
+                    <span className="tma-mono hidden w-6 text-xs text-zinc-400 sm:block">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
                     <button
                       onClick={() =>
                         updateStatus(assignment.id, assignment.status)
                       }
                       title="Click to change status"
-                      className={`h-3.5 w-3.5 shrink-0 rounded-full transition hover:scale-125 ${getDotColor(
+                      className={`h-4 w-4 shrink-0 transition hover:scale-110 ${getDotColor(
                         assignment
                       )}`}
                     />
@@ -810,9 +885,9 @@ export default function Home() {
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <h4
-                          className={`truncate font-semibold text-teal-950 ${
+                          className={`truncate text-base font-bold ${
                             assignment.status === "Completed"
-                              ? "text-teal-800/45 line-through"
+                              ? "text-zinc-400 line-through"
                               : ""
                           }`}
                         >
@@ -820,7 +895,7 @@ export default function Home() {
                         </h4>
                         {getUrgencyBadge(assignment)}
                       </div>
-                      <p className="mt-1 truncate text-sm text-teal-800/50">
+                      <p className="mt-1 truncate text-sm text-zinc-500">
                         {(() => {
                           const titleHasCourse = assignment.title
                             .toLowerCase()
@@ -838,12 +913,12 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2.5 md:justify-end">
+                  <div className="flex flex-wrap items-center gap-2 md:justify-end">
                     <span
-                      className={`rounded-md px-2 py-0.5 text-[11px] font-semibold tracking-wide uppercase ${
+                      className={`border-2 border-ink px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${
                         assignment.source === "gmail"
-                          ? "bg-sky-100 text-sky-800"
-                          : "bg-teal-100 text-teal-800"
+                          ? "bg-sky-200"
+                          : "bg-zinc-100"
                       }`}
                     >
                       {assignment.source === "gmail" ? "Gmail" : "Manual"}
@@ -853,12 +928,12 @@ export default function Home() {
                       {getDueText(assignment)}
                     </div>
 
-                    <div className="text-xs text-teal-800/40">
+                    <div className="tma-mono text-xs text-zinc-400">
                       {formatDate(assignment.due_date)}
                     </div>
 
                     <span
-                      className={`rounded-md px-2.5 py-1 text-xs font-medium ${getStatusStyle(
+                      className={`px-2.5 py-1 text-xs font-bold ${getStatusStyle(
                         assignment.status
                       )}`}
                     >
@@ -868,9 +943,9 @@ export default function Home() {
                     <button
                       onClick={() => deleteAssignment(assignment.id)}
                       title="Delete assignment"
-                      className="rounded-lg p-2 text-teal-800/30 transition hover:bg-rose-50 hover:text-rose-600"
+                      className="border-2 border-transparent p-1.5 text-zinc-400 transition hover:border-ink hover:bg-[var(--signal)] hover:text-white"
                     >
-                      <Trash2 size={18} />
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </div>
@@ -881,23 +956,21 @@ export default function Home() {
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-teal-950/40 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-3xl border border-teal-900/10 bg-white p-6 shadow-[0_30px_80px_-20px_rgba(11,31,42,0.45)]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 p-4 backdrop-blur-sm">
+          <div className="tma-panel w-full max-w-md bg-white p-6">
             <div className="flex items-center justify-between">
-              <h2 className="tma-brand text-xl font-bold text-teal-950">
-                Add Assignment
-              </h2>
+              <h2 className="tma-brand text-2xl font-bold">Add Assignment</h2>
               <button
                 onClick={() => setShowForm(false)}
-                className="rounded-lg p-2 text-teal-800/40 hover:bg-teal-50"
+                className="border-2 border-ink p-1.5 hover:bg-zinc-100"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
             <div className="mt-5 space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-medium text-teal-900/80">
+                <label className="mb-2 block text-xs font-bold tracking-wider uppercase">
                   Assignment Title
                 </label>
                 <input
@@ -910,12 +983,12 @@ export default function Home() {
                       title: event.target.value,
                     })
                   }
-                  className="w-full rounded-xl border border-teal-900/10 bg-teal-50/30 px-4 py-3 outline-none transition focus:border-teal-600 focus:bg-white"
+                  className="w-full border-2 border-ink bg-zinc-50 px-4 py-3 outline-none focus:bg-white"
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-teal-900/80">
+                <label className="mb-2 block text-xs font-bold tracking-wider uppercase">
                   Course Name
                 </label>
                 <input
@@ -928,12 +1001,12 @@ export default function Home() {
                       course: event.target.value,
                     })
                   }
-                  className="w-full rounded-xl border border-teal-900/10 bg-teal-50/30 px-4 py-3 outline-none transition focus:border-teal-600 focus:bg-white"
+                  className="w-full border-2 border-ink bg-zinc-50 px-4 py-3 outline-none focus:bg-white"
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-teal-900/80">
+                <label className="mb-2 block text-xs font-bold tracking-wider uppercase">
                   Due Date
                 </label>
                 <input
@@ -945,7 +1018,7 @@ export default function Home() {
                       dueDate: event.target.value,
                     })
                   }
-                  className="w-full rounded-xl border border-teal-900/10 bg-teal-50/30 px-4 py-3 outline-none transition focus:border-teal-600 focus:bg-white"
+                  className="w-full border-2 border-ink bg-zinc-50 px-4 py-3 outline-none focus:bg-white"
                 />
               </div>
             </div>
@@ -954,14 +1027,14 @@ export default function Home() {
               <button
                 onClick={() => setShowForm(false)}
                 disabled={saving}
-                className="rounded-xl px-4 py-2 text-teal-900/70 hover:bg-teal-50 disabled:opacity-50"
+                className="border-2 border-ink px-4 py-2 font-bold hover:bg-zinc-100 disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddAssignment}
                 disabled={saving}
-                className="flex items-center gap-2 rounded-xl bg-teal-950 px-5 py-2 text-white transition hover:bg-teal-800 disabled:opacity-50"
+                className="tma-btn flex items-center gap-2 bg-[var(--lime)] px-5 py-2 font-bold disabled:opacity-50"
               >
                 {saving && <Loader2 size={16} className="animate-spin" />}
                 {saving ? "Saving..." : "Add Assignment"}
@@ -981,6 +1054,8 @@ function StatCard({
   danger = false,
   active = false,
   onClick,
+  wide = false,
+  accent = "lime",
 }: {
   icon: ReactNode;
   label: string;
@@ -988,38 +1063,48 @@ function StatCard({
   danger?: boolean;
   active?: boolean;
   onClick?: () => void;
+  wide?: boolean;
+  accent?: "lime" | "signal" | "sky" | "amber" | "zinc";
 }) {
+  const accents: Record<string, string> = {
+    lime: "bg-[var(--lime)]",
+    signal: "bg-[var(--signal)] text-white",
+    sky: "bg-sky-300",
+    amber: "bg-amber-300",
+    zinc: "bg-zinc-200",
+  };
+
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-3xl border p-5 text-left transition duration-200 hover:-translate-y-1 ${
-        danger
-          ? "border-rose-200/80 bg-gradient-to-br from-rose-50 to-orange-50/40"
-          : "tma-glass"
-      } ${
-        active
-          ? danger
-            ? "ring-2 ring-rose-400/70"
-            : "ring-2 ring-teal-800/40"
-          : ""
+      className={`tma-panel group text-left transition duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[7px_7px_0_var(--ink)] ${
+        wide ? "sm:col-span-2 lg:col-span-2" : "lg:col-span-1"
+      } ${active ? "bg-ink text-[var(--lime)]" : "bg-white"} ${
+        danger && !active ? "bg-rose-50" : ""
       }`}
     >
-      <div
-        className={`mb-4 flex h-10 w-10 items-center justify-center rounded-2xl ${
-          danger ? "bg-rose-100 text-rose-600" : "bg-teal-100/80 text-teal-800"
-        }`}
-      >
-        {icon}
+      <div className="flex items-start justify-between gap-3 p-5">
+        <div>
+          <p
+            className={`text-xs font-bold tracking-[0.16em] uppercase ${
+              active ? "text-[var(--lime)]/70" : "text-zinc-500"
+            }`}
+          >
+            {label}
+          </p>
+          <p className="tma-brand mt-2 text-4xl font-bold tracking-tight">
+            {value}
+          </p>
+        </div>
+        <div
+          className={`flex h-10 w-10 items-center justify-center border-2 border-ink ${
+            active ? "bg-[var(--lime)] text-ink" : accents[accent]
+          }`}
+        >
+          {icon}
+        </div>
       </div>
-      <p className="text-sm text-teal-800/55">{label}</p>
-      <p
-        className={`tma-brand mt-1 text-3xl font-bold tracking-tight ${
-          danger ? "text-rose-600" : "text-teal-950"
-        }`}
-      >
-        {value}
-      </p>
     </button>
   );
 }
