@@ -13,6 +13,8 @@ import {
   X,
   Loader2,
   RefreshCw,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
@@ -161,7 +163,7 @@ function formatLastSynced(value: string | null) {
   return formatDate(value.slice(0, 10));
 }
 
-function getGreeting(date = new Date()) {
+function getGreeting(date: Date) {
   const hour = date.getHours();
 
   if (hour < 5) return "Good night";
@@ -171,16 +173,190 @@ function getGreeting(date = new Date()) {
   return "Good night";
 }
 
-function formatDateTime(date: Date) {
-  return date.toLocaleString(undefined, {
-    weekday: "long",
-    day: "numeric",
+function toIsoDay(year: number, monthIndex: number, day: number) {
+  const yyyy = String(year);
+  const mm = String(monthIndex + 1).padStart(2, "0");
+  const dd = String(day).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function parseIsoDay(value: string) {
+  if (!value) return null;
+  const [year, month, day] = value.split("-").map(Number);
+  if (!year || !month || !day) return null;
+  return new Date(year, month - 1, day);
+}
+
+function DueDatePicker({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+}) {
+  const selected = parseIsoDay(value);
+  const [open, setOpen] = useState(false);
+  const [view, setView] = useState(() => {
+    const base = selected || new Date();
+    return new Date(base.getFullYear(), base.getMonth(), 1);
+  });
+
+  useEffect(() => {
+    if (!open) return;
+
+    const base = parseIsoDay(value) || new Date();
+    setView(new Date(base.getFullYear(), base.getMonth(), 1));
+  }, [open, value]);
+
+  const year = view.getFullYear();
+  const month = view.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const startWeekday = new Date(year, month, 1).getDay();
+
+  const monthLabel = view.toLocaleString(undefined, {
     month: "long",
     year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
   });
+
+  const displayValue = selected
+    ? selected.toLocaleDateString(undefined, {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : "Pick a due date";
+
+  const today = new Date();
+  const todayIso = toIsoDay(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate()
+  );
+
+  const cells: Array<{ day: number | null; iso: string | null }> = [];
+  for (let i = 0; i < startWeekday; i++) {
+    cells.push({ day: null, iso: null });
+  }
+  for (let day = 1; day <= daysInMonth; day++) {
+    cells.push({ day, iso: toIsoDay(year, month, day) });
+  }
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        className="flex w-full items-center justify-between border-2 border-ink bg-zinc-50 px-4 py-3 text-left outline-none transition hover:bg-white"
+      >
+        <span className="flex items-center gap-3">
+          <span className="flex h-9 w-9 items-center justify-center border-2 border-ink bg-[var(--lime)]">
+            <Calendar size={16} />
+          </span>
+          <span>
+            <span className="block text-[10px] font-bold tracking-[0.16em] text-zinc-500 uppercase">
+              Due date
+            </span>
+            <span className="tma-mono text-sm font-semibold">{displayValue}</span>
+          </span>
+        </span>
+        <ChevronRight
+          size={18}
+          className={`transition ${open ? "rotate-90" : ""}`}
+        />
+      </button>
+
+      {open && (
+        <div className="tma-panel absolute inset-x-0 top-[calc(100%+8px)] z-20 bg-white p-3">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={() => setView(new Date(year, month - 1, 1))}
+              className="border-2 border-ink bg-[var(--lime)] p-1.5 hover:translate-x-[-1px] hover:translate-y-[-1px]"
+              aria-label="Previous month"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <p className="tma-brand text-sm font-bold tracking-tight">
+              {monthLabel}
+            </p>
+            <button
+              type="button"
+              onClick={() => setView(new Date(year, month + 1, 1))}
+              className="border-2 border-ink bg-[var(--lime)] p-1.5 hover:translate-x-[-1px] hover:translate-y-[-1px]"
+              aria-label="Next month"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+
+          <div className="mb-1 grid grid-cols-7 gap-1">
+            {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((label) => (
+              <div
+                key={label}
+                className="tma-mono py-1 text-center text-[10px] font-bold tracking-wider text-zinc-400 uppercase"
+              >
+                {label}
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-7 gap-1">
+            {cells.map((cell, index) => {
+              if (!cell.day || !cell.iso) {
+                return <div key={`empty-${index}`} className="aspect-square" />;
+              }
+
+              const isSelected = value === cell.iso;
+              const isToday = cell.iso === todayIso;
+
+              return (
+                <button
+                  key={cell.iso}
+                  type="button"
+                  onClick={() => {
+                    onChange(cell.iso!);
+                    setOpen(false);
+                  }}
+                  className={`aspect-square border-2 text-sm font-bold transition ${
+                    isSelected
+                      ? "border-ink bg-[var(--lime)]"
+                      : isToday
+                        ? "border-ink bg-ink text-[var(--lime)]"
+                        : "border-transparent hover:border-ink hover:bg-lime-100"
+                  }`}
+                >
+                  {cell.day}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                onChange(todayIso);
+                setOpen(false);
+              }}
+              className="flex-1 border-2 border-ink bg-zinc-50 px-2 py-1.5 text-xs font-bold uppercase tracking-wide hover:bg-[var(--lime)]"
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onChange("");
+                setOpen(false);
+              }}
+              className="flex-1 border-2 border-ink bg-white px-2 py-1.5 text-xs font-bold uppercase tracking-wide hover:bg-zinc-100"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function Home() {
@@ -198,7 +374,8 @@ export default function Home() {
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [now, setNow] = useState(() => new Date());
+  const [now, setNow] = useState<Date | null>(null);
+  const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     course: "",
@@ -210,6 +387,9 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    setMounted(true);
+    setNow(new Date());
+
     const timer = window.setInterval(() => {
       setNow(new Date());
     }, 1000);
@@ -556,19 +736,25 @@ export default function Home() {
     { id: "all", label: "All" },
   ];
 
-  const clockTime = now.toLocaleTimeString(undefined, {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true,
-  });
+  const clockTime = now
+    ? now.toLocaleTimeString(undefined, {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+      })
+    : "--:--:--";
 
-  const clockDate = now.toLocaleDateString(undefined, {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  const clockDate = now
+    ? now.toLocaleDateString(undefined, {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : "Loading date…";
+
+  const greeting = now ? getGreeting(now) : "Hello";
 
   const tickerItems = [
     statistics.overdue > 0
@@ -579,7 +765,7 @@ export default function Home() {
     gmail.connected
       ? `Gmail linked · ${formatLastSynced(gmail.lastSynced)}`
       : "Connect Gmail to auto-import deadlines",
-    getGreeting(now),
+    greeting,
   ];
 
   return (
@@ -664,7 +850,7 @@ export default function Home() {
               Live session
             </p>
             <h2 className="tma-brand whitespace-pre-line text-5xl leading-[0.95] font-bold sm:text-6xl lg:text-7xl">
-              {getGreeting(now).replace(" ", "\n")}
+              {mounted ? greeting.replace(" ", "\n") : "Hello"}
             </h2>
             <p className="mt-4 max-w-md text-base text-zinc-600">
               Your assignments, deadlines, and Gmail imports — one sharp board.
@@ -1009,16 +1195,14 @@ export default function Home() {
                 <label className="mb-2 block text-xs font-bold tracking-wider uppercase">
                   Due Date
                 </label>
-                <input
-                  type="date"
+                <DueDatePicker
                   value={formData.dueDate}
-                  onChange={(event) =>
+                  onChange={(dueDate) =>
                     setFormData({
                       ...formData,
-                      dueDate: event.target.value,
+                      dueDate,
                     })
                   }
-                  className="w-full border-2 border-ink bg-zinc-50 px-4 py-3 outline-none focus:bg-white"
                 />
               </div>
             </div>
